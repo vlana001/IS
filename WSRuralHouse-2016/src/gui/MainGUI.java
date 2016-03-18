@@ -146,7 +146,7 @@ public class MainGUI extends JFrame {
 
 	private JLabel getLblNewLabel() {
 		if (lblNewLabel == null) {
-			lblNewLabel = new JLabel("Select option:");
+			lblNewLabel = new JLabel("Seleccionar opcion:");
 			lblNewLabel.setFont(new Font("Tahoma", Font.BOLD, 13));
 			lblNewLabel.setForeground(Color.BLACK);
 			lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
