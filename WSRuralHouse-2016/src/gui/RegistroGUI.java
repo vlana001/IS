@@ -198,10 +198,15 @@ private static final long serialVersionUID = 1L;
 				
 				int num[] = validateInput();	//Validar datos introducidos
 				
-				for(int i=0;i<7;i++){
-					if(num[i]==0)
+				for(int i=0; i<7; i++)
+				{	
+					if(num[i] == 0)
 						bien=false;
 				}
+				
+				if(num[0] == 2 || num[1] == 2 || num[4] == 2)
+					bien=false;
+				
 				if(!bien){
 					printErrorMessages(num); //Imprimir mensajes de error
 				}else{
@@ -220,7 +225,7 @@ private static final long serialVersionUID = 1L;
 					logicaNegocio.saveUserData(nombreUser, strPassword, nombre, apellidos, email, dni);
 					
 					//Imprimir en login registro correcto
-					LoginGUI b = new LoginGUI(); // cuando nos registramos vamos al login de nuevo
+					LoginGUI b = new LoginGUI("a"); // cuando nos registramos vamos al login de nuevo
 					b.setVisible(true);
 					setVisible(false);
 				}

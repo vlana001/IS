@@ -1,0 +1,239 @@
+package gui;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.Rectangle;
+import java.util.List;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.DefaultListModel;
+import javax.swing.JList;
+import javax.swing.JLabel;
+import javax.swing.JButton;
+import javax.swing.JScrollPane;
+import javax.swing.ListModel;
+
+import businessLogic.FacadeImplementationWS;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import javax.swing.JComboBox;
+
+import com.db4o.ObjectSet;
+
+import domain.Cliente;
+import domain.Offer;
+import javax.swing.JSpinner;
+
+import java.util.EventListener;
+import javax.swing.ScrollPaneConstants;
+
+public class BlockUnblockClients extends JFrame {
+
+	private FacadeImplementationWS logicaNegocio;
+	
+	private JPanel contentPane;
+	
+	//Mensaje
+	JLabel lblMsg = new JLabel("");
+	
+	//No bloqueado
+	private DefaultListModel listUnbloquedInfo = new DefaultListModel();//Modelo
+	private JList listClientesNoBloqueados = new JList(listUnbloquedInfo);
+	private JLabel lblClientesNoBloqueados = new JLabel("Clientes No bloqueados");
+	private JButton btnBloquear = new JButton("Bloquear ");
+	//private final JScrollPane scrollPaneClientesNoBloqueados = new JScrollPane();
+	
+	
+	//Bloqueado
+	private DefaultListModel listBloquedInfo = new DefaultListModel();
+	private JList listCLientesBloqueados = new JList(listBloquedInfo);
+	private JLabel lblClientesBloqueados = new JLabel("Clientes Bloqueados");
+	private JButton btnDesbloquear = new JButton("Desbloquear ");
+	private final JScrollPane scrollPaneClientesBloqueados = new JScrollPane();
+	
+	private String correoBloquear;
+	private String correoDesbloquear;
+
+	
+	
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					BlockUnblockClients frame = new BlockUnblockClients();
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	/**
+	 * Create the frame.
+	 */
+	public BlockUnblockClients() {
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 450, 300);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+		
+		lblClientesNoBloqueados.setBounds(24, 44, 178, 15);
+		contentPane.add(lblClientesNoBloqueados);
+		
+		btnBloquear.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(listClientesNoBloqueados.getSelectedValue() != null)
+					getNewLists(correoBloquear, true);
+				//System.out.println(correoBloquear);
+			}
+		});
+		btnBloquear.setBounds(42, 210, 147, 32);
+		contentPane.add(btnBloquear);
+		
+	
+		lblClientesBloqueados.setBounds(259, 44, 154, 15);
+		contentPane.add(lblClientesBloqueados);
+		
+		
+		btnDesbloquear.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(listCLientesBloqueados.getSelectedValue() != null)
+					getNewLists(correoDesbloquear, false);
+			}
+		});
+		btnDesbloquear.setBounds(247, 210, 147, 32);
+		contentPane.add(btnDesbloquear);
+		
+		lblMsg.setBounds(52, 12, 296, 15);
+		contentPane.add(lblMsg);
+		scrollPaneClientesNoBloqueados.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		
+		
+		
+		listCLientesBloqueados.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+			public void valueChanged(javax.swing.event.ListSelectionEvent e) {
+				// El evento se dispara dos veces: antes de cambiar el valor y una vez cambiado
+				// Interesa solo actuar una vez cambiado
+				if (e.getValueIsAdjusting()) return; 
+				
+				String selectedEmail = listCLientesBloqueados.getSelectedValue().toString();
+				correoDesbloquear = selectedEmail;
+				
+			}
+		});
+				scrollPaneClientesBloqueados.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+				scrollPaneClientesBloqueados.setBounds(245, 71, 168, 127);
+				contentPane.add(scrollPaneClientesBloqueados);
+				scrollPaneClientesBloqueados.setViewportView(listCLientesBloqueados);
+				
+				
+				scrollPaneClientesNoBloqueads.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+				scrollPaneClientesNoBloqueads.setBounds(34, 71, 168, 127);
+				contentPane.add(scrollPaneClientesNoBloqueads);
+				
+				//JList listClientesNoBloqueados_1 = new JList((ListModel) null);
+				scrollPaneClientesNoBloqueads.setViewportView(listClientesNoBloqueados_1);
+				/*scrollPaneClientesBloqueados.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+				
+				scrollPaneClientesBloqueados.setBounds(34, 71, 168, 127);
+				
+				contentPane.add(scrollPane);
+				
+				scrollPane.setViewportView(list);
+				*/
+						//Cuando se selecciona un cliente de la lista pasar el valor del email 
+						listClientesNoBloqueados.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+							public void valueChanged(javax.swing.event.ListSelectionEvent e) {
+								// El evento se dispara dos veces: antes de cambiar el valor y una vez cambiado
+								// Interesa solo actuar una vez cambiado
+								if (e.getValueIsAdjusting()) return; 
+								
+								//if (!listClientesNoBloqueados.isSelectionEmpty()){ // A este metodo se le llama tambien cuando se hace un clear del JList, 
+								// por lo que podria estar la seleccion vacia y dar un error
+								
+								String selectedEmail = listClientesNoBloqueados.getSelectedValue().toString();
+								correoBloquear = selectedEmail;
+								
+								
+								/*ListModel model = listClientesNoBloqueados.getModel();
+				
+								System.out.println("Imprimir lista");
+								for(int i=0; i < model.getSize(); i++)
+								     System.out.println(model.getElementAt(i)); 
+								*/
+							}
+						});
+						
+		
+		
+		//Obtener las 2 listas
+		loadLists();
+	}
+	
+	
+	
+	
+	//Cada vez que se pulsa cualquiera de los 2 botones, volver a obtener la nueva lista de bloqueados y no bloqueados
+	// y mostrar nuevo mensaje
+	public void getNewLists(String email, boolean estado)
+	{
+		//Cambiar estado cliente
+		logicaNegocio.changeClientStatus(email, estado);
+		
+		//listUnbloquedInfo.removeAllElements();
+		//listBloquedInfo.removeAllElements();
+		//listClientesNoBloqueados.setListData(new String[0]);
+		//listCLientesBloqueados.setListData(new String[0]);
+		
+		//Obtener nuevas listas
+		loadLists();
+		
+		//Mensaje
+		if(estado == false)
+			lblMsg.setText("El cliente ha sido bloqueado");
+		else
+			lblMsg.setText("El cliente ha sido desbloqueado");
+			
+	}
+	
+	public void loadLists()
+	{
+		logicaNegocio = new FacadeImplementationWS();
+		
+		//No bloqueados
+		String[] result = logicaNegocio.obtainAllUnbloquedClients();
+		
+		/*System.out.println("List no bloqueados");
+		 for(int i= 0; i<result.length; i++)
+			System.out.println(result[i]);
+		*/
+
+		for (Object v : result)
+			listUnbloquedInfo.addElement(v);//Populate the list
+		
+		
+		//Bloqueados
+		String[] result2 = logicaNegocio.obtainAllBloquedClients();
+		
+		/*System.out.println("List bloqueados");
+		for(int i= 0; i<result2.length; i++)
+			System.out.println(result2[i]);
+		*/
+		
+		for (Object v : result2)
+			listBloquedInfo.addElement(v);
+		
+	}
+}

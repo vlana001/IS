@@ -22,7 +22,7 @@ public class ApplicationLauncher {
 	
 	public static void main(String[] args) {
 		
-		LoginGUI a=new LoginGUI();
+		LoginGUI a=new LoginGUI("a");
 		a.setVisible(true);
 		
 		//MainGUI a=new MainGUI();

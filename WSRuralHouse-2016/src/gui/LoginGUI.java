@@ -23,6 +23,8 @@ import javax.swing.JPasswordField;
 import businessLogic.FacadeImplementationWS;
 import java.awt.Component;
 import javax.swing.Box;
+import javax.swing.JToggleButton;
+import java.awt.Color;
 
 public class LoginGUI extends JFrame {
 private static final long serialVersionUID = 1L;
@@ -45,6 +47,7 @@ private static final long serialVersionUID = 1L;
 	private final JLabel lblRegistrarse = new JLabel("REGISTRARSE:");
 	private final JButton buttonRegistro = new JButton("Registro");
 	
+	private final JButton btnOlvideLaContrasea = new JButton("Olvide la contraseña");
 	//private JPanel jContentPane = null;
 	
 
@@ -55,7 +58,7 @@ private static final long serialVersionUID = 1L;
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					LoginGUI frame = new LoginGUI();
+					LoginGUI frame = new LoginGUI("a");
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -67,7 +70,7 @@ private static final long serialVersionUID = 1L;
 	/**
 	 * Create the frame.
 	 */
-	public LoginGUI() {
+	public LoginGUI(String email) {
 		setTitle("HouseBookingLogin");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
@@ -77,7 +80,11 @@ private static final long serialVersionUID = 1L;
 		contentPane.setLayout(null);
 		lblUsuario.setBounds(12, 46, 98, 31);
 		
-		lblMsgError.setBounds(63, 12, 360, 22);
+		//Mostrar mensaje 
+		if(!email.equals("a"))
+			lblMsgError.setText("Se ha efectuado el cambio de contraseña");
+		
+		lblMsgError.setBounds(55, 12, 360, 22);
 		contentPane.add(lblMsgError);
 		
 		contentPane.add(lblUsuario);
@@ -102,11 +109,12 @@ private static final long serialVersionUID = 1L;
 				String userName = textUsuario.getText().trim();
 				char[] password = textPassword.getPassword();
 				String strPassword = String.valueOf(password).trim();
+				String msg ="";
 				
 				if(userName.isEmpty() || strPassword.isEmpty())
 				{
 					//Si alguno de los campos estan vacios mostramos un mensaje indicandolo
-					String msg = "Inserte su nombre de usuario y contraseña";
+					msg = "Inserte su nombre de usuario y contraseña";
 					lblMsgError.setText(msg);
 					
 				}else
@@ -119,16 +127,20 @@ private static final long serialVersionUID = 1L;
 					if(prueba == 1)
 					{ //Login correcto, es un cliente
 					  //Redireccionamos al jframe 
-						
-						MainGUI a=new MainGUI(); //creamos un main para que redireccione a otro 
-						a.setVisible(true);
-						setVisible(false);//ponemos la ventana de login invisible
-						
+						if(logicaNegocio.checkClientBlocked(userName)==false)
+						{
+							mostrarCasasGUI a=new mostrarCasasGUI(); //creamos un main para que redireccione a otro 
+							a.setVisible(true);
+							setVisible(false);//ponemos la ventana de login invisible
+						}else
+						{
+							msg = "Cliente bloqueado por el administrador";
+						}		
 					}else
 					{
 						if(prueba == 2)
 						{
-							//Login correcto, es un cliente
+							//Login correcto, es un cliente propietario
 							//Redireccionamos al jframe 
 								
 							DarAltaCasaGUI a=new DarAltaCasaGUI(); //creamos un main para que redireccione a otro 
@@ -137,12 +149,12 @@ private static final long serialVersionUID = 1L;
 						}else
 						{
 							//Mostrar mensaje de error
-							String msg = "Nombre de usuario y/o contraseña incorrectos";
-							lblMsgError.setText(msg);
+							msg = "Nombre de usuario y/o contraseña incorrectos";
 						}
 						
 					}
-				}	
+				}
+				lblMsgError.setText(msg);
 			}
 		});
 		buttonAceptar.setBounds(165, 132, 120, 31);
@@ -165,5 +177,16 @@ private static final long serialVersionUID = 1L;
 		Component horizontalGlue = Box.createHorizontalGlue();
 		horizontalGlue.setBounds(150, 187, 1, 1);
 		contentPane.add(horizontalGlue);
+		
+		btnOlvideLaContrasea.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				RestablecerPassword restablecerPassword = new RestablecerPassword();
+				restablecerPassword.setVisible(true);
+				setVisible(false);
+			}
+		});
+		btnOlvideLaContrasea.setForeground(Color.BLACK);
+		btnOlvideLaContrasea.setBounds(12, 175, 186, 25);
+		contentPane.add(btnOlvideLaContrasea);
 	}
 }

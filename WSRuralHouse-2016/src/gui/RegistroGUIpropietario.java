@@ -176,6 +176,10 @@ private FacadeImplementationWS logicaNegocio;
 					if(num[i]==0)
 						bien=false;
 				}
+				
+				if(num[0] == 2 || num[1] == 2 || num[4] == 2)
+					bien=false;
+				
 				if(!bien){
 					printErrorMessagesPropietario(num); //Imprimir mensajes de error
 				}else{
@@ -196,7 +200,7 @@ private FacadeImplementationWS logicaNegocio;
 					
 				logicaNegocio.saveOwnerData(nombreUser, strPassword, nombre, apellidos, email, dni, numeroCuenta, telefono);
 				
-				LoginGUI b = new LoginGUI(); 
+				LoginGUI b = new LoginGUI("a"); 
 				b.setVisible(true);
 				setVisible(false);
 			}
