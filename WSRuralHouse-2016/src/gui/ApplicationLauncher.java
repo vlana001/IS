@@ -25,6 +25,12 @@ public class ApplicationLauncher {
 		LoginGUI a=new LoginGUI("a");
 		a.setVisible(true);
 		
+		/*
+		QueryAvailabilityGUI qa = new QueryAvailabilityGUI();
+		qa.setVisible(true);
+		GridLayout gridLayout = (GridLayout) qa.getContentPane().getLayout();
+		*/
+		
 		//MainGUI a=new MainGUI();
 		GridLayout gridLayout = (GridLayout) a.getContentPane().getLayout();
 		//gridLayout.setRows(3);

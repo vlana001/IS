@@ -9,12 +9,16 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 
 import businessLogic.FacadeImplementationWS;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JTextField;
 import javax.swing.JRadioButton;
 import javax.swing.ButtonGroup;
@@ -37,6 +41,10 @@ public class RestablecerPassword extends JFrame {
 	JRadioButton rdbtnCliente = new JRadioButton("Cliente");
 	JRadioButton rdbtnPropietario = new JRadioButton("Propietario");
 	
+	//Menu
+	JMenuBar menuBar;
+	JMenu inicioSesion, exit;
+		
 	/**
 	 * Launch the application.
 	 */
@@ -63,7 +71,49 @@ public class RestablecerPassword extends JFrame {
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
+		setTitle("Restablecer contraseña");
 		
+		//Menu
+		menuBar = new JMenuBar();
+		
+		inicioSesion = new JMenu("Iniciar sesión");
+		menuBar.add(inicioSesion);
+		inicioSesion.addMenuListener(new MenuListener() {
+			@Override
+			public void menuSelected(MenuEvent e) {
+				LoginGUI m = new LoginGUI("a");
+				m.setVisible(true);
+				setVisible(false);
+			}
+			
+			 @Override
+		        public void menuDeselected(MenuEvent e) {	
+		     }
+			 
+			@Override
+			public void menuCanceled(MenuEvent e) {
+			}
+	    });
+		
+		exit = new JMenu("Exit");
+		menuBar.add(exit);
+		exit.addMenuListener(new MenuListener() {
+			@Override
+			public void menuSelected(MenuEvent e) {
+				System.exit(0);
+			}
+			
+			 @Override
+		        public void menuDeselected(MenuEvent e) {	
+				 //System.exit(0);
+		     }
+			 
+			@Override
+			public void menuCanceled(MenuEvent e) {
+			}
+	    });
+		this.setJMenuBar(menuBar);
+				
 		JButton btnRestablecerContrasea = new JButton("Restablecer contraseña");
 		btnRestablecerContrasea.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {

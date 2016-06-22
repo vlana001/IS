@@ -1,8 +1,13 @@
 package dataAccess;
 
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Vector;
@@ -16,6 +21,7 @@ import com.db4o.cs.config.ClientConfiguration;
 import com.db4o.query.Predicate;
 
 import configuration.ConfigXML;
+import domain.Admin;
 //import domain.Booking;
 import domain.Offer;
 import domain.Propietario;
@@ -100,7 +106,8 @@ public class DataAccess  {
 	public Offer createOffer(RuralHouse ruralHouse, Date firstDay, Date lastDay, float price) {
 
 	try {
-		
+		//Primero obtenemos de la BD la casa a la que queremos añadir la oferta. De esta forma tenemos la referencia correcta del objeto 
+		//y al hacer el store no nos la duplica.
 		RuralHouse proto = new RuralHouse(ruralHouse.getHouseNumber(),null,null);
 		ObjectSet<RuralHouse> result = db.queryByExample(proto);
 		RuralHouse rh=result.next();
@@ -114,7 +121,6 @@ public class DataAccess  {
 
 		db.store(theDB4oManagerAux); // To store the new value for offerNumber
 		db.store(rh);
-		
 		
 		db.commit(); 
 		return o;
@@ -170,20 +176,33 @@ public class DataAccess  {
 	{
 		try
 		{
+			/*En los registros no deja registrar un propietario o admin con el nombre de un cliente o al reves
+			 * 
+			 */
+			
 			Cliente protoCliente = new Cliente(username, password, null,null,null,null, null, 0, false, false);
 			ObjectSet<Cliente> result = db.queryByExample(protoCliente);
 			
 			Propietario protoPropietario = new Propietario(username, password, null,null,null,null, null, 0, null, 0, false);
 			ObjectSet<Propietario> result2 = db.queryByExample(protoPropietario);
 			
-
+			Admin protoAdmin = new Admin(username, password, 1, null, false, null, null, null, true);
+			ObjectSet<Admin> result3 = db.queryByExample(protoAdmin);
+			
+			//Crear admin nombre: admin, pass: admin
+			/*Admin a = new Admin("admin", "admin", 1, "v1", false, "2016/05/08 21:01:04", "Problema login", "Hola", true);
+			db.store(a);
+			db.commit();
+			*/
+			
+			
 			/*
 			  En lugar de obtener todos los objetos de ese tipo y verificar cada uno de los objetos obtenidos
 			  si tienen los atributos username y password, obtenemos si existe un objeto con esas caracteristicas
 			  
 			 	Si existe el objeto(solo puede existir un objeto con esos valores en los atributos
 				ya que al registrar usuarios no permitimos que se repitan los nombres de usuario)
-				devolvemos 1 o 2 dependiendo de su rol
+				devolvemos 1, 2 o 3 dependiendo de su rol
 			*/
 			if(result.size() == 1)
 				return 1; //es un cliente
@@ -192,7 +211,13 @@ public class DataAccess  {
 				if(result2.size() == 1)
 					return 2; //es un propietario
 				else 
-					return 3;//no es cliente ni propietario
+				{
+					if(result3.size() == 1)
+						return 3;//es el admin
+					else
+						return 4;//no es cliente, propietario o admin
+				}
+					
 			}
 		}finally {
 	         //db.close();
@@ -291,7 +316,7 @@ public class DataAccess  {
 	}
 	
 	
-	public void storeRuralHouseData(String loc, String desc, int numHab, int numPersonas, boolean[] general, boolean[] cocina, boolean[] sala)
+	public boolean storeRuralHouseData(String loc, String nombre, String desc, int numHab, int numPersonas, boolean[] general, boolean[] cocina, boolean[] sala, String user)
 	{
 		
 		ObjectSet<DB4oManagerAux2> res1 =db.queryByExample(DB4oManagerAux2.class); //obtenemos todos los objetos DB4oManagerAux2 de la BD
@@ -299,12 +324,14 @@ public class DataAccess  {
 		ListIterator<DB4oManagerAux2> listIter = res1.listIterator();//obtener el puntero al iterador
 		if (listIter.hasNext()) theDB4oManagerAux2 =  res1.next();//recorremos la lista de objetos hacia adelante hasta el final y movemos el iterador 
 		
-		RuralHouse rh = new RuralHouse(theDB4oManagerAux2.houseNumber++, desc, loc, numHab, numPersonas, general, cocina, sala);
+		RuralHouse rh = new RuralHouse(theDB4oManagerAux2.houseNumber++, nombre, desc, loc, numHab, numPersonas, general, cocina, sala,user, false);
 		db.store(rh);
 		
 		db.store(theDB4oManagerAux2); // To store the new value for houseNumber
 		
 		db.commit();
+		
+		return true;
 	}
 	
 	//Iteracion 2
@@ -773,7 +800,7 @@ public class DataAccess  {
 		}
 		
 		public Vector<Offer> devuelveLasOfertas(RuralHouse x){
-			Offer z=new Offer(0,null,null,0,x); //busco las ofertas de esa casa(cualquier oferta)
+			Offer z=new Offer(0,null,null,0,x,null, 0); //busco las ofertas de esa casa(cualquier oferta)
 			ObjectSet<Offer>  result = db.queryByExample(z);
 			Vector<Offer> nuevo=new Vector<Offer>();
 			while(result.hasNext()){ //anado las ofertas a un object set y luego las meto en un vector para poder devolverlas
@@ -791,5 +818,547 @@ public class DataAccess  {
 			}
 			return casas;
 			
+		}
+		
+		//ITERACION 3
+		
+		/*
+		public Offer creandoOferta(RuralHouse casaParaOferta, Date firstDay, Date lastDay, float precio,String user)
+		{
+			int numOferta = calcularNumeroOferta();
+			Offer x = new Offer(numOferta, firstDay, lastDay, precio, casaParaOferta, null, 0);
+			//System.out.println("oferta "+x);
+			System.out.println("fd "+firstDay);
+			db.store(x);
+			db.commit();
+			
+		}
+		*/
+		
+		//Coge todas las ofertas de la BD y devuelve el total de ofertas + 1
+		//Al eliminar una oferta no se borra de la BD, sino que cambia su estado a eliminada por el propietario,
+		//por eso no se puede repetir el numero de oferta
+		/*public int calcularNumeroOferta()
+		{
+			List<Offer> result = db.query(new Predicate<Offer>() {
+				  public boolean match(Offer offer) {
+				    return offer.getOfferNumber() >= 0; 
+				  }
+			});
+			
+			return result.size()+1;
+		}
+		*/
+		
+		
+		
+		//Iteracion 3
+		
+		public void saveMessage(int msgNumber, String msgUser, boolean userRol, String msgDate, String msgAsunto, String msgCuerpo)
+		{
+			//Crear prototipo admin
+			Admin protoAdmin = new Admin("admin","admin",1,null,false,null,null,null,true);
+			ObjectSet<Admin> result = db.queryByExample(protoAdmin);
+			
+			if (result.isEmpty()) 
+			{
+				System.out.println("El admin no estaba en la BD"); 
+			}else
+			{
+				Admin found = (Admin)result.get(0); //Solo hay un admin en total
+					
+				found.addMsgNumber(msgNumber);
+				found.addMsgUser(msgUser);
+				found.addMsgUserRol(userRol);
+				found.addMsgTime(msgDate);
+				found.addMsgAsunto(msgAsunto);
+				found.addMsgText(msgCuerpo);
+				found.addMsgRead(false);
+			
+				db.store(found);
+				db.commit();
+				System.out.println("El mensaje se ha guardado en el buzon del administrador");
+			}
+		}
+		
+		public boolean getUserRolByUsername(String username) 
+		{
+			
+			Cliente protoCliente = new Cliente(username, null, null,null,null,null, null, 0, false, false);
+			ObjectSet<Cliente> result = db.queryByExample(protoCliente);
+			
+			if(result.size() == 1)
+				return false; //es un cliente
+			else
+				return true; //es un propietario
+		}
+		
+		public int getAdministratorsLastMessageNumber()
+		{
+			int numLastMessage = 0; //Numero total de mensajes
+			
+			//Crear prototipo admin
+			Admin proto = new Admin("admin","admin",1,null,false,null,null,null,true);
+			ObjectSet<Admin> result = db.queryByExample(proto);
+			
+			if (result.isEmpty()) 
+			{
+				System.out.println("El admin no estaba en la BD"); 
+			}else
+			{
+				Admin found = (Admin)result.get(0); //Solo hay un admin en total
+				numLastMessage = found.getMsgNumber().size();//null
+			
+				System.out.println("Enviado el numero total de mensajes del admin");
+			}
+			return numLastMessage;
+		}
+		
+		//obtener datos mensajes
+		public int[] getMessageNumbers()
+		{
+			//Obtengo el admin
+			Admin proto = new Admin("admin","admin",1,null,false,null,null,null,true);//admin con el primer mensaje
+			ObjectSet<Admin> result = db.queryByExample(proto);
+			
+			//ArrayList de numeros de mensaje con todos los numeros de mensaje
+			//que tiene el admin
+			ArrayList<Integer> msgNumbers = result.get(0).getMsgNumber();
+			
+			//Convertir ArrayList<Integer> a array int
+			int[] num = new int[msgNumbers.size()];
+			
+		    for (int i=0; i < num.length; i++)
+		    {
+		        num[i] = msgNumbers.get(i).intValue();
+		    }
+			
+			return num;
+		}
+		
+		public String[] getMessageDates()
+		{
+			//Obtengo el admin
+			Admin proto = new Admin("admin","admin",1,null,false,null,null,null,true);
+			ObjectSet<Admin> result = db.queryByExample(proto);
+			
+			//ArrayList de fechas de mensaje con todos las fechas de mensaje
+			//que tiene el admin
+			ArrayList<String> msgDates = result.get(0).getMsgDateHour();
+			
+			//Convertir ArrayList<Integer> a array String
+			String[] dates = new String[msgDates.size()];
+			
+		    for (int i=0; i < dates.length; i++)
+		    {
+		    	dates[i] = msgDates.get(i).toString();
+		    }
+			
+			return dates;
+		}
+		
+		public String[] getMessageUsers()
+		{
+			//Obtengo el admin
+			Admin proto = new Admin("admin","admin",1,null,false,null,null,null,true);
+			ObjectSet<Admin> result = db.queryByExample(proto);
+			
+			//ArrayList de users de mensaje con todos las users de mensaje
+			//que tiene el admin
+			ArrayList<String> msgUsers = result.get(0).getMsgUser();
+			
+			//Convertir ArrayList<Integer> a array String
+			String[] users = new String[msgUsers.size()];
+			
+		    for (int i=0; i < users.length; i++)
+		    {
+		    	users[i] = msgUsers.get(i).toString();
+		    }
+			
+			return users;
+		}
+		
+		public boolean[] getMessageUsersRoles()
+		{
+			//Obtengo el admin
+			Admin proto = new Admin("admin","admin",1,null,false,null,null,null,true);
+			ObjectSet<Admin> result = db.queryByExample(proto);
+			
+			//ArrayList de roles de users de mensaje con todos las users de mensaje
+			//que tiene el admin
+			ArrayList<Boolean> msgUserRoles = result.get(0).getMsgUserRol();
+			
+			//Convertir ArrayList<Integer> a array String
+			boolean[] userRoles = new boolean[msgUserRoles.size()];
+			
+		    for (int i=0; i < userRoles.length; i++)
+		    {
+		    	userRoles[i] = msgUserRoles.get(i);
+		    }
+			
+			return userRoles;
+		}
+		
+		public String[] getMessageAsunto()
+		{
+			//Obtengo el admin
+			Admin proto = new Admin("admin","admin",1,null,false,null,null,null,true);
+			ObjectSet<Admin> result = db.queryByExample(proto);
+			
+			//ArrayList de users de asuntos con todos las mensajes de mensaje
+			//que tiene el admin
+			ArrayList<String> msgAsuntos = result.get(0).getMsgAsunto();
+			
+			//Convertir ArrayList<Integer> a array String
+			String[] userAsuntos = new String[msgAsuntos.size()];
+			
+		    for (int i=0; i < userAsuntos.length; i++)
+		    {
+		    	userAsuntos[i] = msgAsuntos.get(i).toString();
+		    }
+			
+			return userAsuntos;
+		}
+		
+		public String[] getMessageTexto()
+		{
+			//Obtengo el admin
+			Admin proto = new Admin("admin","admin",1,null,false,null,null,null,true);
+			ObjectSet<Admin> result = db.queryByExample(proto);
+			
+			//ArrayList de texto de mensaje con todos las mensajes de mensaje
+			//que tiene el admin
+			ArrayList<String> msgTexto = result.get(0).getMsgText();
+			
+			//Convertir ArrayList<Integer> a array String
+			String[] userTexto = new String[msgTexto.size()];
+			
+		    for (int i=0; i < userTexto.length; i++)
+		    {
+		    	userTexto[i] = msgTexto.get(i).toString();
+		    }
+			
+			return userTexto;
+		}
+		
+		public boolean[] getMessageRead()
+		{
+			//Obtengo el admin
+			Admin proto = new Admin("admin","admin",1,null,false,null,null,null,true);
+			ObjectSet<Admin> result = db.queryByExample(proto);
+			
+			//ArrayList de estados de mensaje con todos las mensaje
+			//que tiene el admin
+			ArrayList<Boolean> msgUserRead = result.get(0).getMsgRead();
+			
+			//Convertir ArrayList<Integer> a array String
+			boolean[] msgRead = new boolean[msgUserRead.size()];
+			
+		    for (int i=0; i < msgRead.length; i++)
+		    {
+		    	msgRead[i] = msgUserRead.get(i);
+		    }
+			
+			return msgRead;
+		}
+		
+		//cambiar estado mensajes no leidos a leidos
+		public void setUnreadMsgNewStatus()
+		{
+			//Obtengo el admin con todos los mensajes y cambio el estado read a true
+			Admin proto = new Admin("admin","admin",1,null,false,null,null,null,true);
+			ObjectSet<Admin> result = db.queryByExample(proto);
+			
+			//Actualizamos el estado
+			Admin found = (Admin) result.get(0);
+			
+			//crear array del tamaño del array de mensajes con todos los mensajes true
+			ArrayList<Boolean> msgRead = new ArrayList<Boolean>();
+			
+			int num = found.getMsgUser().size();//Num total mensajes
+			for(int i=0;i<num; i++)
+				msgRead.add(true);
+			
+			found.setMsgRead(msgRead);
+			db.store(found);
+			db.commit();
+			
+			System.out.print("El estado de los mensajes no leidos del admin ha sido cambiado a leidos");
+		}
+		
+		//Recibe el nombre de usuario del usuario y devuelve su email
+		public String getEmailByUserName(String usrName, String userRol)
+		{
+			String email = "";
+			
+			if(userRol.equals("cliente"))
+			{
+				Cliente protoCliente = new Cliente(usrName, null, null,null,null,null, null, 0, false, false);
+				ObjectSet<Cliente> result = db.queryByExample(protoCliente);
+				
+				email = result.get(0).getEmail();
+				
+			}else
+			{
+				Propietario protoPropietario = new Propietario(usrName, null, null,null,null,null, null, 0, null, 0, false);
+				ObjectSet<Propietario> result = db.queryByExample(protoPropietario);
+				
+				email = result.get(0).getEmail();
+			}
+			
+			return email;
+		}
+		
+		public ArrayList<Offer> buscarOfertasFiltros(final String loc, final int precioMax, final int precioMin, final int numHab, final int numPersonas,final Date dInicio, final Date dFin, final boolean[] general, final boolean[] cocina, final boolean[] sala)
+		{			
+			List<Offer> result = db.query(new Predicate<Offer>() {
+				  public boolean match(Offer offer) {	
+					  return
+				    		offer.getRuralHouse().getCity().equals(loc) &&
+				    		(offer.getPrice() <= precioMax) &&
+				    		(offer.getPrice() >= precioMin) &&
+				    		(offer.getRuralHouse().getNumeroHabitaciones() == numHab) &&
+				    		(offer.getRuralHouse().getNumeroPersonas() == numPersonas) && 
+				    		(offer.getFirstDay().equals(dInicio)) &&
+				    		(offer.getLastDay().equals(dFin)) &&
+				    		(offer.getRuralHouse().getGeneral()[0] == general[0]) &&
+				    		(offer.getRuralHouse().getGeneral()[1] == general[1]) &&
+				    		(offer.getRuralHouse().getGeneral()[2] == general[2]) &&
+				    		(offer.getRuralHouse().getGeneral()[3] == general[3]) &&
+				    		(offer.getRuralHouse().getGeneral()[4] == general[4]) &&
+				    		(offer.getRuralHouse().getGeneral()[5] == general[5]) &&
+				    		(offer.getRuralHouse().getGeneral()[6] == general[6]) &&
+				    		(offer.getRuralHouse().getGeneral()[7] == general[7]) &&
+				    		(offer.getRuralHouse().getCocina()[0] == cocina[0]) &&
+				    		(offer.getRuralHouse().getCocina()[1] == cocina[1]) &&
+				    		(offer.getRuralHouse().getCocina()[2] == cocina[2]) &&
+				    		(offer.getRuralHouse().getCocina()[3] == cocina[3]) &&
+				    		(offer.getRuralHouse().getSala()[0] == sala[0]) &&
+				    		(offer.getRuralHouse().getSala()[1] == sala[1]) &&
+				    		(offer.getRuralHouse().getSala()[2] == sala[2]); 
+				  }
+			}); 
+			
+			ArrayList<Offer> ofertas= new ArrayList<Offer>(result);
+			System.out.println("e"+ofertas);
+			return ofertas;
+		}
+		
+		
+		public ArrayList<RuralHouse> getRuralHouseByOwnerId(final String user)
+		{
+			//query nativa
+			List<RuralHouse> result = db.query(new Predicate<RuralHouse>() {
+				  public boolean match(RuralHouse rh) {
+				    return rh.getUser().equals(user) && !rh.isEliminida(); 
+				    
+				  }
+			}); 
+			
+			ArrayList<RuralHouse> listaRuralHouses = new ArrayList<RuralHouse>(result);
+			
+			return listaRuralHouses;
+		}
+		
+		
+		public ArrayList<Offer> getOffersByRHId(final int idCasa)
+		{
+			List<Offer> result = db.query(new Predicate<Offer>() {
+				  public boolean match(Offer of) {
+				    return of.getRuralHouse().getHouseNumber().equals(idCasa); 
+				    
+				  }
+			}); 
+			
+			ArrayList<Offer> listaOffers = new ArrayList<Offer>(result);
+			
+			return listaOffers;
+		}
+		
+		public RuralHouse getRHById(final int idCasa)
+		{
+			List<RuralHouse> result = db.query(new Predicate<RuralHouse>() {
+				  public boolean match(RuralHouse rh) {
+				    return rh.getHouseNumber()==idCasa; 
+				    
+				  }
+			}); 
+			
+			RuralHouse rh = result.get(0);	
+			return rh;
+		}
+		
+		
+		public void eliminarOferta(final int idOferta)
+		{
+			//Obtengo la oferta con dicho id 
+			List<Offer> result = db.query(new Predicate<Offer>() {
+				  public boolean match(Offer of) {
+				    return of.getOfferNumber() == idOferta; 
+				  }
+			}); 
+
+			
+			//Actualizamos el estado
+			Offer found = (Offer) result.get(0);
+			found.setEstadoOferta(2);
+			db.store(found);
+			db.commit();
+		
+			System.out.print("El estado de la oferta ha sido cambiado a eliminada");
+		}
+		
+		
+		public Offer getOfferByOfferId(final int idOferta)
+		{
+			List<Offer> result = db.query(new Predicate<Offer>() {
+				  public boolean match(Offer of) {
+				    return of.getOfferNumber() == idOferta; 
+				    
+				  }
+			}); 
+			
+			Offer of = result.get(0);	
+			
+			return of;
+		}
+		
+		
+		public void modificarOferta(final int idOferta, Date dateInicio, Date dateFin, float nuevoPrecio, int intEstadoSel)
+		{ 	
+			List<Offer> result = db.query(new Predicate<Offer>() {
+					  public boolean match(Offer of) {
+					    return of.getOfferNumber() == idOferta; 
+					  }
+				}); 
+			
+			if (result.isEmpty()) 
+			{
+				System.out.println("No ha podido actualizarse la oferta porque no se ha encontrado en la BD"); 
+				//return true;
+			}
+			else 
+			{
+				Offer found = (Offer) result.get(0);
+				found.setFirstDay(dateInicio);
+				found.setLastDay(dateFin);
+				found.setPrice(nuevoPrecio);
+				found.setEstadoOferta(intEstadoSel);
+				db.store(found);
+				db.commit();
+				System.out.println("La oferta se ha actualizado");
+				//return false;
+			}
+		}
+		
+		
+		//Si se intenta crear una oferta para una casa en un periodo de fechas que ya hay una oferta no dejar crearla
+		//A: fecha pasamos funcion:  firstDay - lastDay
+		//B: cada fecha de la BD: offer.getFirstDay() - offer.getLastDay()
+		//(StartA <= EndB) and (EndA >= StartB) -> Overlap
+		public boolean existeOfertasEnEsaCasayFecha(final int idRH, final Date firstDay, final Date lastDay, float price){
+			
+			List<Offer> result = db.query(new Predicate<Offer>() {
+				  public boolean match(Offer offer) {
+				    return 
+				    	(offer.getRuralHouse().getHouseNumber() == idRH) && 
+				    	((offer.getEstadoOferta() == 0) || (offer.getEstadoOferta() == 1)) && //oferta no eliminada
+				    	(firstDay.before(offer.getLastDay())) &&
+				    	(lastDay.after(offer.getFirstDay()));
+				  }
+			});
+						
+			System.out.println("r "+result);
+			if(result.size()!=0) //Se solapa, por lo tanto no dejar crear oferta
+				return true;
+			else
+				return false;	
+		}
+		
+		//Si se intenta eliminar una casa que tiene adquiridas ofertas para el futuro no dejar eliminarla
+		//Si hay gente en ese momento en la casa dejar eliminarla
+		//A: fecha actual
+		//B: cada fecha de la BD: offer.getFirstDay() - offer.getLastDay()
+		public boolean existenOfertasFuturasReservadasEnEsaCasa(final int idCasa){
+			
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");      
+			Date currentDateWithoutTime = null;
+			try {
+				currentDateWithoutTime = sdf.parse(sdf.format(new Date()));
+				//System.out.println("c"+currentDateWithoutTime);
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			
+			final Date currentDate = currentDateWithoutTime;
+			System.out.println("date "+currentDate);
+			
+			List<Offer> result = db.query(new Predicate<Offer>() {
+				  public boolean match(Offer offer) {
+				    return 
+				    	(offer.getRuralHouse().getHouseNumber() == idCasa) && //Hay ofertas en esa casa
+				    	(offer.getEstadoOferta() == 1)  && //Es oferta adquirida
+				    	(offer.getFirstDay().after(currentDate) || offer.getFirstDay().equals(currentDate)); //Es futura la oferta
+				  }
+			});
+			
+			System.out.println("tamaño "+result.size());	
+			if(result.size()!=0) //Hay futuras reservas, por lo tanto no dejar borrar la casa
+				return true;
+			else
+				return false;	
+		}
+		
+		
+		public void eliminarCasa(final int idCasa)
+		{
+			List<RuralHouse> result = db.query(new Predicate<RuralHouse>() {
+				  public boolean match(RuralHouse rh) {
+				    return rh.getHouseNumber() == idCasa; 
+				  }
+			}); 
+		
+			if (result.isEmpty()) 
+			{
+				System.out.println("No ha podido eliminarse la casa porque no se ha encontrado en la BD"); 
+				//return true;
+			}
+			else 
+			{
+				RuralHouse found = (RuralHouse) result.get(0);
+				found.setEliminida(true);
+				db.store(found);
+				db.commit();
+				System.out.println("La casa se ha eliminado");
+				//return false;
+			}
+		}
+		
+		public boolean realizarReservaRH(final int idOfertaSeleccionada, String user)
+		{
+			boolean b = true;
+			List<Offer> result = db.query(new Predicate<Offer>() {
+				  public boolean match(Offer of) {
+				    return of.getOfferNumber() == idOfertaSeleccionada; 
+				  }
+			}); 
+		
+			if (result.isEmpty()) 
+			{
+				System.out.println("No se ha encontrado la oferta en la BD"); 
+				b=false;
+			}
+			else 
+			{
+				Offer found = (Offer) result.get(0);
+				found.setUser(user);
+				found.setEstadoOferta(1);
+				db.store(found);
+				db.commit();
+				System.out.println("La oferta se ha adquirido");
+				b=true;
+			}
+			
+			return b;
 		}
 }

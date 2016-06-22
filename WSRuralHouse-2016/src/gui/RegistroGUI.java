@@ -11,6 +11,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JTextField;
 import javax.swing.JButton;
 import javax.swing.UIManager;
@@ -24,6 +26,8 @@ import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.border.TitledBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 import javax.swing.ListSelectionModel;
 import javax.swing.Box;
 
@@ -69,6 +73,9 @@ private static final long serialVersionUID = 1L;
 	private final JLabel errorApellidos = new JLabel("");
 	private final JLabel errorEmail = new JLabel("");
 
+	//Menu
+	JMenuBar menuBar;
+	JMenu inicioSesion, exit;
 	
 	/**
 	 * Launch the application.
@@ -97,6 +104,47 @@ private static final long serialVersionUID = 1L;
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
+		
+		//Menu
+		menuBar = new JMenuBar();
+		
+		inicioSesion = new JMenu("Iniciar sesión");
+		menuBar.add(inicioSesion);
+		inicioSesion.addMenuListener(new MenuListener() {
+			@Override
+			public void menuSelected(MenuEvent e) {
+				LoginGUI m = new LoginGUI(textEmail.getText());
+				m.setVisible(true);
+				setVisible(false);
+			}
+			
+			 @Override
+		        public void menuDeselected(MenuEvent e) {	
+		     }
+			 
+			@Override
+			public void menuCanceled(MenuEvent e) {
+			}
+	    });
+		
+		exit = new JMenu("Exit");
+		menuBar.add(exit);
+		exit.addMenuListener(new MenuListener() {
+			@Override
+			public void menuSelected(MenuEvent e) {
+				System.exit(0);
+			}
+			
+			 @Override
+		        public void menuDeselected(MenuEvent e) {	
+				 //System.exit(0);
+		     }
+			 
+			@Override
+			public void menuCanceled(MenuEvent e) {
+			}
+	    });
+		this.setJMenuBar(menuBar);		
 		
 		
 		lblNombreusuario.setBounds(8, 40, 133, 31);
@@ -332,7 +380,7 @@ private static final long serialVersionUID = 1L;
 		if(isApellidosValid(textApellidos.getText().trim())){
 			num[3]=1;
 		}
-		if(isNombreUsuarioValid(nombreUsuario))
+		if(isNombreUsuarioValid(nombreUsuario)) 
 		{
 			if(isANewNombreUsuario(nombreUsuario))
 				num[4]=1;
@@ -504,6 +552,7 @@ private static final long serialVersionUID = 1L;
 			return false;
 	}
 	
+	
 	public boolean isNombreUsuarioValid(String nomUs) 
 	{
 		String NOMBREUSUARIO_PATTERN = "^[A-Za-z0-9-_]+( [A-Za-z0-9-_]+)*$";
@@ -519,11 +568,20 @@ private static final long serialVersionUID = 1L;
 	}
 	
 	//Comprobamos que no existe un usuario registrado con ese email
+	
+	/*Solo puede haber un usuario con un nombre de usuario, es decir un cliente, 
+	 * no podra llamarse (nombre de usuario) igual que un admin o un propietario.
+	 * Los nombre de usuario no se pueden repetir.
+	 */
 	public boolean isANewNombreUsuario(String nomUs) 
 	{
-		boolean b = logicaNegocio.isExistingUserName(nomUs);
+		//Cliente, recibe true si no hay un cliente con ese nombre de usuario
+		boolean bCliente = logicaNegocio.isExistingUserName(nomUs); 
+		//propietario, recibe true si no hay un propietario con ese nombre de usuario
+		boolean bPropietario = logicaNegocio.isExistingUserNameOwner(nomUs); 
 		
-		if(b)
+		//El administrador tiene nombre de usuario admin
+		if(bCliente && bPropietario && !nomUs.equals("admin"))
 			return true;
 		else
 			return false;	

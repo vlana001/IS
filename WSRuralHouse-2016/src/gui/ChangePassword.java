@@ -8,8 +8,12 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JTextField;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
@@ -33,6 +37,9 @@ public class ChangePassword extends JFrame {
 	JLabel lblCodigoRecibido = new JLabel("Codigo recibido:");
 	
 	JButton btnCambiarContraseña = new JButton("Cambiar contraseña");
+	//Menu
+	JMenuBar menuBar;
+	JMenu inicioSesion, exit;
 	
 	/**
 	 * Launch the application.
@@ -55,12 +62,54 @@ public class ChangePassword extends JFrame {
 	 */
 	public ChangePassword(String email, String user_type) {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 450, 300);
+		setBounds(100, 100, 450, 326);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
+		setTitle("Restablecer contraseña");
 		
+		//Menu
+		menuBar = new JMenuBar();
+		
+		inicioSesion = new JMenu("Iniciar sesión");
+		menuBar.add(inicioSesion);
+		inicioSesion.addMenuListener(new MenuListener() {
+			@Override
+			public void menuSelected(MenuEvent e) {
+				LoginGUI m = new LoginGUI("a");
+				m.setVisible(true);
+				setVisible(false);
+			}
+			
+			 @Override
+		        public void menuDeselected(MenuEvent e) {	
+		     }
+			 
+			@Override
+			public void menuCanceled(MenuEvent e) {
+			}
+	    });
+		
+		exit = new JMenu("Exit");
+		menuBar.add(exit);
+		exit.addMenuListener(new MenuListener() {
+			@Override
+			public void menuSelected(MenuEvent e) {
+				System.exit(0);
+			}
+			
+			 @Override
+		        public void menuDeselected(MenuEvent e) {	
+				 //System.exit(0);
+		     }
+			 
+			@Override
+			public void menuCanceled(MenuEvent e) {
+			}
+	    });
+		this.setJMenuBar(menuBar);
+				
 		//Mostrar mensaje 
 		if(!email.equals("a"))
 			lblMensaje.setText("Se ha enviado un email a " + email);

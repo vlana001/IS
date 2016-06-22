@@ -8,8 +8,12 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.JTextArea;
@@ -33,6 +37,9 @@ private static final long serialVersionUID = 1L;
 	private final JLabel lblLocalizacion =  new JLabel("Localización");
 	private final JTextField textLocalizacion;
 	
+	private final JLabel lblNombreCasa = new JLabel("Nombre casa");
+	private final JTextField textNombreCasa;
+	
 	private final JLabel lblDescripcion = new JLabel("Descripción");
 	private final JTextArea textDescripcion = new JTextArea("");
 	
@@ -42,6 +49,7 @@ private static final long serialVersionUID = 1L;
 	private final JLabel lblNumeroDeHuespedes = new JLabel("Número de huespedes");
 	private final JSpinner spinnerNumeroHabitaciones = new JSpinner();
 	
+	private final JLabel lblMsg = new JLabel("");
 	
 	//General
 	private final JLabel lblGeneral = new JLabel("General:");
@@ -72,12 +80,16 @@ private static final long serialVersionUID = 1L;
 	
 	private final JButton btnDarDeAlta = new JButton("Dar de alta");
 	
-	private final JLabel errorLocalizacion = new JLabel("");
-	private final JLabel errorHabitaciones = new JLabel("");
-	private final JLabel errorPersonas = new JLabel("");
-	private final JLabel errorDescripcion = new JLabel("");
+	private  static String user;
+	private  static String pass;
 	
+	private final JButton btnMostrarTodasMis = new JButton("Mostrar todas mis casas");
+	private final JButton btnAtras = new JButton("Atras");
 	
+	//Menu
+	JMenuBar menuBar;
+	JMenu menuPropietario, exit;
+		
 	/**
 	 * Launch the application.
 	 */
@@ -85,7 +97,7 @@ private static final long serialVersionUID = 1L;
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					DarAltaCasaGUI frame = new DarAltaCasaGUI();
+					DarAltaCasaGUI frame = new DarAltaCasaGUI(user);
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -97,7 +109,9 @@ private static final long serialVersionUID = 1L;
 	/**
 	 * Create the frame.
 	 */
-	public DarAltaCasaGUI() {
+	public DarAltaCasaGUI(final String user) {
+		this.user=user;
+		this.pass=pass;
 		setTitle("Dar de Alta Propiedad");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 597, 560);
@@ -106,14 +120,63 @@ private static final long serialVersionUID = 1L;
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
+		//Menu
+		menuBar = new JMenuBar();
+		
+		menuPropietario = new JMenu("Menu Principal");
+		menuBar.add(menuPropietario);
+		menuPropietario.addMenuListener(new MenuListener() {
+			@Override
+			public void menuSelected(MenuEvent e) {
+				MenuPropietario m = new MenuPropietario(user);
+				m.setVisible(true);
+				setVisible(false);
+			}
+			
+			 @Override
+		        public void menuDeselected(MenuEvent e) {	
+		     }
+			 
+			@Override
+			public void menuCanceled(MenuEvent e) {
+			}
+	    });
+		
+		exit = new JMenu("Exit");
+		menuBar.add(exit);
+		exit.addMenuListener(new MenuListener() {
+			@Override
+			public void menuSelected(MenuEvent e) {
+				System.exit(0);
+			}
+			
+			 @Override
+		        public void menuDeselected(MenuEvent e) {	
+				 //System.exit(0);
+		     }
+			 
+			@Override
+			public void menuCanceled(MenuEvent e) {
+			}
+	    });
+		this.setJMenuBar(menuBar);		
+				
 		lblLocalizacion.setBounds(12, 57, 110, 15);
 		contentPane.add(lblLocalizacion);
 		
 		lblDescripcion.setBounds(12, 350, 110, 19);
 		contentPane.add(lblDescripcion);
 		
+		lblNombreCasa.setBounds(297, 57, 104, 15);
+		contentPane.add(lblNombreCasa);
+		
+		textNombreCasa = new JTextField();
+		textNombreCasa.setBounds(401, 55, 141, 25);
+		contentPane.add(textNombreCasa);
+		textNombreCasa.setColumns(10);
+		
 		textLocalizacion = new JTextField();
-		textLocalizacion.setBounds(133, 55, 151, 19);
+		textLocalizacion.setBounds(133, 53, 151, 21);
 		contentPane.add(textLocalizacion);
 		textLocalizacion.setColumns(10);
 		
@@ -139,6 +202,7 @@ private static final long serialVersionUID = 1L;
 				}else{
 					//Guardar en BD*/
 					String localizacion = textLocalizacion.getText();
+					String nombreCasa = textNombreCasa.getText();
 					String descripcion = textDescripcion.getText();
 					
 					int numeroHabitaciones = (Integer) spinnerNumeroHabitaciones.getValue();
@@ -169,8 +233,11 @@ private static final long serialVersionUID = 1L;
 					
 					
 					logicaNegocio = new FacadeImplementationWS();	
-					logicaNegocio.saveRuralHouseData(localizacion, descripcion, numeroHabitaciones, numeroPersonas, general, cocina, sala);
+					boolean b = logicaNegocio.saveRuralHouseData(localizacion, nombreCasa, descripcion, numeroHabitaciones, numeroPersonas, general, cocina, sala,user,pass);
 					
+					if(b)
+						lblMsg.setText("Casa dada de alta correctamente");
+						
 					/*
 					//Imprimir en login registro correcto
 					LoginGUI b = new LoginGUI(); // cuando nos registramos vamos al login de nuevo
@@ -215,16 +282,16 @@ private static final long serialVersionUID = 1L;
 		rdbtnLavavajillas.setBounds(106, 253, 110, 23);
 		contentPane.add(rdbtnLavavajillas);
 		
-		rdbtnCalefaccion.setBounds(252, 163, 110, 23);
+		rdbtnCalefaccion.setBounds(283, 163, 110, 23);
 		contentPane.add(rdbtnCalefaccion);
 		
 		rdbtnAireAcondicionado.setBounds(96, 187, 173, 23);
 		contentPane.add(rdbtnAireAcondicionado);
 		
-		rdbtnBarbacoa.setBounds(276, 190, 92, 23);
+		rdbtnBarbacoa.setBounds(283, 187, 110, 23);
 		contentPane.add(rdbtnBarbacoa);
 		
-		rdbtnPisicina.setBounds(372, 187, 149, 23);
+		rdbtnPisicina.setBounds(411, 163, 149, 23);
 		contentPane.add(rdbtnPisicina);
 		
 		rdbtnLavadora.setBounds(252, 257, 92, 23);
@@ -248,32 +315,34 @@ private static final long serialVersionUID = 1L;
 		rdbtnLineaMusical.setBounds(320, 306, 151, 32);
 		contentPane.add(rdbtnLineaMusical);
 		
-		rdbtnSePermitenPerros.setBounds(103, 214, 181, 23);
+		rdbtnSePermitenPerros.setBounds(96, 214, 188, 23);
 		contentPane.add(rdbtnSePermitenPerros);
 		
 		rdbtnSePermiteFumar.setBounds(286, 214, 149, 23);
 		contentPane.add(rdbtnSePermiteFumar);
 		
+		/*
+		btnMostrarTodasMis.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				MostrarCasasPropietarioGUI a=new MostrarCasasPropietarioGUI(user,pass);
+				a.setVisible(true);
+				setVisible(false);
+			}
+		});
+		btnMostrarTodasMis.setBounds(392, 475, 179, 35);
+		contentPane.add(btnMostrarTodasMis);
+		*/
+	
 		
-		errorLocalizacion.setBounds(302, 57, 281, 15);
-		contentPane.add(errorLocalizacion);
-		
-		
-		errorHabitaciones.setBounds(278, 92, 305, 19);
-		contentPane.add(errorHabitaciones);
-		
-		
-		errorPersonas.setBounds(277, 121, 306, 25);
-		contentPane.add(errorPersonas);
-		
-		
-		errorDescripcion.setBounds(30, 445, 553, 19);
-		contentPane.add(errorDescripcion);
+		lblMsg.setBounds(117, 26, 380, 19);
+		contentPane.add(lblMsg);
 	}
+	
+	
 	public int[] validarAltaCasa(){ //validamos los campos de la casa
-		int num[]=new int[4];
+		int num[]=new int[5];
 		
-		for(int i=0;i<4;i++)
+		for(int i=0;i<5;i++)
 			num[i]=0;
 		
 		if(isNumeroHabitacionesValid((Integer) spinnerNumeroHabitaciones.getValue())){
@@ -288,8 +357,13 @@ private static final long serialVersionUID = 1L;
 		if(isDescripcionValid(textDescripcion.getText().trim())){
 			num[3]=1;
 		}
+		if(isNombreCasaValid(textNombreCasa.getText().trim())){
+			num[4]=1;
+		}
 		return num;
 	}
+	
+	
 	//VALIDACIONES
 	public boolean isNumeroHabitacionesValid(int x){
 		if(x<5 && x>0){
@@ -305,6 +379,7 @@ private static final long serialVersionUID = 1L;
 			return false;
 		}
 	}
+	
 	public boolean isLocalizacionValid(String nom){
 		//El nombre solo puede tener caracteres alfabeticos
 		String NOMBRE_PATTERN = "^[A-Za-z]+( [A-Za-z]+)*$";
@@ -318,6 +393,22 @@ private static final long serialVersionUID = 1L;
 		}else
 			return false;
 	}
+	
+	public boolean isNombreCasaValid(String nomCasa){
+		//El nombre solo puede tener caracteres alfabeticos
+		//String NOMBRE_PATTERN = "^[A-Za-z]+( [A-Za-z]+)*$";
+		String NOMBRECASA_PATTERN = "^[A-Za-z0-9-_]+( [A-Za-z0-9-_]+)*$";
+		
+		if(!nomCasa.isEmpty())
+		{
+			if(nomCasa.matches(NOMBRECASA_PATTERN))
+				return true;
+			else
+				return false;
+		}else
+			return false;
+	}
+	
 	public boolean isDescripcionValid(String x){
 		if(x.length()>200){
 			return false;
@@ -325,14 +416,16 @@ private static final long serialVersionUID = 1L;
 			return true;
 		}
 	}
+	
 	public void resetErrorMessagesCASA(){
-		errorLocalizacion.setText("");
-		errorHabitaciones.setText("");
-		errorPersonas.setText("");
-		errorDescripcion.setText("");
+		
+		lblMsg.setText("");
 		
 		textLocalizacion.setBorder(null);
 		textLocalizacion.updateUI();
+		
+		textNombreCasa.setBorder(null);
+		textNombreCasa.updateUI();
 		
 		textDescripcion.setBorder(null);
 		textDescripcion.updateUI();
@@ -342,26 +435,32 @@ private static final long serialVersionUID = 1L;
 		
 		spinnerNumeroHuespedes.setBorder(null);
 		spinnerNumeroHuespedes.updateUI();
-		
-		
 	}
+	
+	
 	public void printErrorMessagesCASA(int []num){
 		Border border = BorderFactory.createLineBorder(Color.RED, 3);
+		
 		if(num[0]==0){
-			errorHabitaciones.setText("Introduzca un maximo de 4 habitaciones");
+			lblMsg.setText("Introduzca un maximo de 4 habitaciones");
 			spinnerNumeroHabitaciones.setBorder(border);
 		}
 		if(num[1]==0){
-			errorPersonas.setText("Introduzca un maximo de 14 personas");
+			lblMsg.setText("Introduzca un maximo de 14 personas");
 			spinnerNumeroHuespedes.setBorder(border);
 		}
 		if(num[2]==0){
-			errorLocalizacion.setText("Introduce una localizacion valida");
+			lblMsg.setText("Introduce una localizacion válida");
 			textLocalizacion.setBorder(border);
 		}
 		if(num[3]==0){
-			errorDescripcion.setText("Introduce descripcion valida con 200 caracteres o menos");
+			lblMsg.setText("Introduce descripcion valida con 200 carácteres o menos");
 			textDescripcion.setBorder(border);
 		}
+		if(num[4]==0){
+			lblMsg.setText("Introduce un nombre válido");
+			textNombreCasa.setBorder(border);
+		}
 	}
+	
 }

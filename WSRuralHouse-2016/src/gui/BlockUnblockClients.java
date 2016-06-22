@@ -11,10 +11,14 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JLabel;
 import javax.swing.JButton;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JScrollPane;
 import javax.swing.ListModel;
 
@@ -60,6 +64,10 @@ public class BlockUnblockClients extends JFrame {
 	private String correoDesbloquear;
 	
 	
+	//Menu
+	JMenuBar menuBar;
+	JMenu menuAdmin, exit;
+	
 	/**
 	 * Launch the application.
 	 */
@@ -81,14 +89,55 @@ public class BlockUnblockClients extends JFrame {
 	 */
 	public BlockUnblockClients() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 450, 300);
+		setBounds(100, 100, 439, 361);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
-		lblClientesNoBloqueados.setBounds(24, 44, 178, 15);
+		lblClientesNoBloqueados.setBounds(31, 83, 178, 15);
 		contentPane.add(lblClientesNoBloqueados);
+		
+		//Menu
+		menuBar = new JMenuBar();
+		
+		menuAdmin = new JMenu("Menu Admin");
+		menuBar.add(menuAdmin);
+		menuAdmin.addMenuListener(new MenuListener() {
+			@Override
+			public void menuSelected(MenuEvent e) {
+				MenuAdminGUI m = new MenuAdminGUI();
+				m.setVisible(true);
+				setVisible(false);
+			}
+			
+			 @Override
+		        public void menuDeselected(MenuEvent e) {	
+		     }
+			 
+			@Override
+			public void menuCanceled(MenuEvent e) {
+			}
+	    });
+		
+		exit = new JMenu("Exit");
+		menuBar.add(exit);
+		exit.addMenuListener(new MenuListener() {
+			@Override
+			public void menuSelected(MenuEvent e) {
+				System.exit(0);
+			}
+			
+			 @Override
+		        public void menuDeselected(MenuEvent e) {	
+				 //System.exit(0);
+		     }
+			 
+			@Override
+			public void menuCanceled(MenuEvent e) {
+			}
+	    });
+		this.setJMenuBar(menuBar);
 		
 		btnBloquear.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -97,11 +146,11 @@ public class BlockUnblockClients extends JFrame {
 				//System.out.println(correoBloquear);
 			}
 		});
-		btnBloquear.setBounds(42, 210, 147, 32);
+		btnBloquear.setBounds(51, 271, 147, 32);
 		contentPane.add(btnBloquear);
 		
 	
-		lblClientesBloqueados.setBounds(259, 44, 154, 15);
+		lblClientesBloqueados.setBounds(252, 83, 154, 15);
 		contentPane.add(lblClientesBloqueados);
 		
 		
@@ -111,11 +160,15 @@ public class BlockUnblockClients extends JFrame {
 					getNewLists(correoDesbloquear, false);
 			}
 		});
-		btnDesbloquear.setBounds(247, 210, 147, 32);
+		btnDesbloquear.setBounds(259, 271, 147, 32);
 		contentPane.add(btnDesbloquear);
 		
-		lblMsg.setBounds(52, 12, 296, 15);
+		lblMsg.setBounds(62, 23, 296, 15);
 		contentPane.add(lblMsg);
+		scrollPaneClientesBloqueados.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollPaneClientesBloqueados.setBounds(245, 110, 168, 127);
+		contentPane.add(scrollPaneClientesBloqueados);
+		scrollPaneClientesBloqueados.setViewportView(listCLientesBloqueados);
 		
 		
 		listCLientesBloqueados.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
@@ -131,10 +184,10 @@ public class BlockUnblockClients extends JFrame {
 				
 			}
 		});
-		scrollPaneClientesBloqueados.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		scrollPaneClientesBloqueados.setBounds(245, 71, 168, 127);
-		contentPane.add(scrollPaneClientesBloqueados);
-		scrollPaneClientesBloqueados.setViewportView(listCLientesBloqueados);
+		scrollPaneClientesNoBloqueados.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollPaneClientesNoBloqueados.setBounds(41, 110, 168, 127);
+		contentPane.add(scrollPaneClientesNoBloqueados);
+		scrollPaneClientesNoBloqueados.setViewportView(listClientesNoBloqueados);
 		
 		
 				
@@ -162,10 +215,6 @@ public class BlockUnblockClients extends JFrame {
 				*/
 			}
 		});
-		scrollPaneClientesNoBloqueados.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		scrollPaneClientesNoBloqueados.setBounds(34, 71, 168, 127);
-		contentPane.add(scrollPaneClientesNoBloqueados);
-		scrollPaneClientesNoBloqueados.setViewportView(listClientesNoBloqueados);
 
 		//Obtener las 2 listas
 		loadLists();

@@ -8,8 +8,12 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JTextField;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
@@ -58,6 +62,9 @@ private FacadeImplementationWS logicaNegocio;
 	private final JLabel errorNumeroCuenta = new JLabel("");
 	private final JLabel errorTelefono = new JLabel("");
 	
+	//Menu
+	JMenuBar menuBar;
+	JMenu inicioSesion, exit;
 
 	/**
 	 * Launch the application.
@@ -95,6 +102,46 @@ private FacadeImplementationWS logicaNegocio;
 		lblNombre.setBounds(10, 124, 98, 31);
 		contentPane.add(lblNombre);
 		
+		//Menu
+		menuBar = new JMenuBar();
+		
+		inicioSesion = new JMenu("Iniciar sesión");
+		menuBar.add(inicioSesion);
+		inicioSesion.addMenuListener(new MenuListener() {
+			@Override
+			public void menuSelected(MenuEvent e) {
+				LoginGUI m = new LoginGUI(textEmail.getText());
+				m.setVisible(true);
+				setVisible(false);
+			}
+			
+			 @Override
+		        public void menuDeselected(MenuEvent e) {	
+		     }
+			 
+			@Override
+			public void menuCanceled(MenuEvent e) {
+			}
+	    });
+		
+		exit = new JMenu("Exit");
+		menuBar.add(exit);
+		exit.addMenuListener(new MenuListener() {
+			@Override
+			public void menuSelected(MenuEvent e) {
+				System.exit(0);
+			}
+			
+			 @Override
+		        public void menuDeselected(MenuEvent e) {	
+				 //System.exit(0);
+		     }
+			 
+			@Override
+			public void menuCanceled(MenuEvent e) {
+			}
+	    });
+		this.setJMenuBar(menuBar);
 		
 		lblApellidos.setBounds(10, 166, 98, 14);
 		contentPane.add(lblApellidos);
@@ -368,9 +415,12 @@ private FacadeImplementationWS logicaNegocio;
 	//Comprobamos que no existe un usuario registrado con ese email
 	public boolean isANewNombreUsuario(String nomUs) 
 	{
-		boolean b = logicaNegocio.isExistingUserNameOwner(nomUs);
+		//Cliente, recibe true si no hay un cliente con ese nombre de usuario
+		boolean bCliente = logicaNegocio.isExistingUserName(nomUs); 
+		//propietario, recibe true si no hay un propietario con ese nombre de usuario
+		boolean bPropietario = logicaNegocio.isExistingUserNameOwner(nomUs);
 		
-		if(b)
+		if(bCliente && bPropietario && !nomUs.equals("admin"))
 			return true;
 		else
 			return false;	

@@ -18,8 +18,12 @@ public class RuralHouse implements Serializable {
 	@XmlID
 	@XmlJavaTypeAdapter(IntegerAdapter.class)
 	private Integer houseNumber;
+	private String nombreRH;
 	private String description;
-	private String city; 
+	private String city;
+	
+	private String user;
+	//private String pass;
 	
 	//General
 	private boolean[] general;
@@ -57,6 +61,8 @@ public class RuralHouse implements Serializable {
 	private int numeroHabitaciones;
 	private int numeroPersonas;
 	
+	private boolean eliminida;
+	
 	public Vector<Offer> offers;
 
 	public RuralHouse() {
@@ -70,8 +76,9 @@ public class RuralHouse implements Serializable {
 		offers=new Vector<Offer>();
 	}
 	
-	public RuralHouse(Integer houseNumber, String description, String city, int roomNumber, int personNumber, boolean[] general, boolean[] kitchen, boolean[] livingRoom) {
+	public RuralHouse(Integer houseNumber,String nombreRH, String description, String city, int roomNumber, int personNumber, boolean[] general, boolean[] kitchen, boolean[] livingRoom, String user, boolean eliminada) {
 		this.houseNumber = houseNumber;
+		this.nombreRH = nombreRH;
 		this.description = description;
 		this.city = city;
 		this.numeroHabitaciones = roomNumber;
@@ -80,6 +87,9 @@ public class RuralHouse implements Serializable {
 		this.cocina = kitchen;
 		this.sala = livingRoom;
 		offers=new Vector<Offer>();
+		this.user=user;
+		//this.pass=pass;
+		this.eliminida=eliminada;
 	}
 
 	public Integer getHouseNumber() {
@@ -88,6 +98,15 @@ public class RuralHouse implements Serializable {
 
 	public void setHouseNumber(Integer houseNumber) {
 		this.houseNumber = houseNumber;
+	}
+	
+
+	public String getNombreRH() {
+		return nombreRH;
+	}
+
+	public void setNombreRH(String nombreRH) {
+		this.nombreRH = nombreRH;
 	}
 
 	public String getDescription() {
@@ -151,6 +170,34 @@ public class RuralHouse implements Serializable {
 	public void setNumeroPersonas(int numeroPersonas) {
 		this.numeroPersonas = numeroPersonas;
 	}
+	
+	
+
+	public String getUser() {
+		return user;
+	}
+
+	public void setUser(String user) {
+		this.user = user;
+	}
+
+	
+	
+	public boolean isEliminida() {
+		return eliminida;
+	}
+
+	public void setEliminida(boolean eliminida) {
+		this.eliminida = eliminida;
+	}
+
+	public Vector<Offer> getOffers() {
+		return offers;
+	}
+
+	public void setOffers(Vector<Offer> offers) {
+		this.offers = offers;
+	}
 
 	/**
 	 * This method creates an offer with a house number, first day, last day and price
@@ -159,11 +206,13 @@ public class RuralHouse implements Serializable {
 	 *            number, start day, last day and price
 	 * @return None
 	 */
-	public Offer createOffer(int offerNumber,Date firstDay, Date lastDay, float price)  {
-        Offer off=new Offer(offerNumber,firstDay,lastDay,price,this);
+	
+	public Offer createOffer(int offerNumber,Date firstDay, Date lastDay, float price)  {//, RuralHouse rh
+        Offer off=new Offer(offerNumber,firstDay,lastDay,price,this, null,0);//offerNumber,firstDay,lastDay,price,rh,null, 0)
         offers.add(off);
         return off;
 	}
+	
 
 	@Override
 	public int hashCode() {

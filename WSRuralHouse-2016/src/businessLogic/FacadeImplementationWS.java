@@ -1,8 +1,11 @@
 package businessLogic;
 
 import java.io.File;
-
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -12,7 +15,6 @@ import java.util.Vector;
 
 import javax.jws.WebMethod;
 import javax.jws.WebService;
-
 
 import com.db4o.ObjectSet;
 
@@ -25,7 +27,6 @@ import domain.RuralHouse;
 import exceptions.BadDates;
 import exceptions.OverlappingOfferExists;
 import domain.Cliente;
-
 
 import java.util.Properties;
 
@@ -156,17 +157,45 @@ public class FacadeImplementationWS  implements ApplicationFacadeInterfaceWS {
 	 {
 		 nivelDatos = new DataAccess();
 		 int usuarioCorrecto = nivelDatos.getUserByUsernameAndPassword(username, password);
-		 nivelDatos.close();				 
+		 nivelDatos.close();
 		 
-		 if(usuarioCorrecto == 1)
+		int tipoUser = 0;
+		 switch (usuarioCorrecto)
+		 {
+		 	case 1:
+		 		tipoUser = 1;//cliente
+		 		break;
+		 		
+	        case 2:
+	        	tipoUser = 2;//propietario
+		 		break;
+		 		
+	        case 3:
+	        	tipoUser = 3;//admin
+		 		break;
+	
+	        default:
+	        	tipoUser = 4;//ningun rol
+		 		break;
+		 }
+		 
+		 return tipoUser;
+		 
+		/* if(usuarioCorrecto == 1)
 			 return 1;
 		 else
 		 {
 			 if(usuarioCorrecto == 2)
 				 return 2;
 			 else
-				 return 3;
-		 }
+			 {
+				 if(usuarioCorrecto == 4)
+					 return 4;
+				 else
+					 return 3;
+			 }
+				 
+		 }*/
 			 
 	 }
 	 
@@ -259,11 +288,13 @@ public class FacadeImplementationWS  implements ApplicationFacadeInterfaceWS {
 		 nivelDatos.close(); 
 	 }
 
-	 public void saveRuralHouseData(String loc, String desc, int numHab, int numPersonas, boolean[] general, boolean[] cocina, boolean[] sala) 
+	 public boolean saveRuralHouseData(String loc, String nomCasa, String desc, int numHab, int numPersonas, boolean[] general, boolean[] cocina, boolean[] sala,String user,String pass) 
 	 {
 		 nivelDatos = new DataAccess();
-		 nivelDatos.storeRuralHouseData(loc, desc, numHab, numPersonas, general, cocina, sala);
+		 boolean bool = nivelDatos.storeRuralHouseData(loc, nomCasa, desc, numHab, numPersonas, general, cocina, sala,user);
 		 nivelDatos.close(); 
+		 
+		 return bool;
 	 }
 	 
 	 
@@ -468,8 +499,9 @@ public class FacadeImplementationWS  implements ApplicationFacadeInterfaceWS {
 		return b;
 	}
 	
+	//ITERACION 2
 	
-	 public Vector<RuralHouse> mostrandoLogica(int x){ //ITERACION 2
+	 public Vector<RuralHouse> mostrandoLogica(int x){ 
 		 nivelDatos=new DataAccess();
 		 Vector<RuralHouse> casasHouses=new Vector<RuralHouse>();
 		 if(x==0){
@@ -497,5 +529,316 @@ public class FacadeImplementationWS  implements ApplicationFacadeInterfaceWS {
 		 nivelDatos.close();
 		 return casas;
 	 }
+	 
+	 //////ITERACION 3
+	 
+	 //Iteracion 3
+	 
+	 public void saveMessage(String msgUser, String msgAsunto, String msgCuerpo)
+	 {
+		 nivelDatos = new DataAccess();
+		 
+		 //Numero mensaje query
+		 //Obtener el numero total de mensajes y asignar numero +1
+		 //El primer mensaje sera el numero 1
+		 int msgNumber = nivelDatos.getAdministratorsLastMessageNumber();
+		 
+		 //Rol user
+		 boolean userRol = nivelDatos.getUserRolByUsername(msgUser);
+		 
+		 String msgDate = getCurrentDateTime(); //Fecha actual
+		 
+		 nivelDatos.saveMessage(msgNumber+1, msgUser, userRol, msgDate, msgAsunto, msgCuerpo);
+		 nivelDatos.close(); 
+	 } 
+	
+	 public String getCurrentDateTime()
+	 {
+		 DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		 Date date = new Date();
+		 return dateFormat.format(date); //2014/08/06 15:59:48
+	 }
+	 
+	 //obtener datos mensajes
+	 public int[] getMessageNumbers()
+	 {
+		 nivelDatos = new DataAccess();
+		 int[] num = nivelDatos.getMessageNumbers();
+		 nivelDatos.close();
+		 
+		 return num;
+	 }
+	 
+	public String[] getMessageDates()
+	{
+		nivelDatos = new DataAccess();
+		String[] dates = nivelDatos.getMessageDates();
+		nivelDatos.close();
+		 
+		return dates;
+	}
+	
+	public String[] getMessageUsers()
+	{
+		nivelDatos = new DataAccess();
+		String[] users = nivelDatos.getMessageUsers();
+		nivelDatos.close();
+		 
+		return users;
+	}
+	
+	public boolean[] getMessageUsersRoles()
+	{
+		nivelDatos = new DataAccess();
+		
+		/*String[] users = nivelDatos.getMessageUsers();
+		boolean[] usersRoles = new boolean[users.length];
+		for(int i=0;i<users.length;i++)
+		{
+			usersRoles[i] = nivelDatos.getUserRolByUsername(users[i]);
+		}*/
+		
+		boolean[] usersRoles = nivelDatos.getMessageUsersRoles();
+		nivelDatos.close();
+		 
+		return usersRoles;
+	}
+	
+	public String[] getMessageAsunto()
+	{
+		nivelDatos = new DataAccess();
+		String[] asuntos = nivelDatos.getMessageAsunto();
+		nivelDatos.close();
+		 
+		return asuntos;
+	}
+	
+	public String[] getMessageTexto()
+	{
+		nivelDatos = new DataAccess();
+		String[] textos = nivelDatos.getMessageTexto();
+		nivelDatos.close();
+		 
+		return textos;
+	}
+	
+	public boolean[] getMessageRead()
+	{
+		nivelDatos = new DataAccess();
+		boolean[] read = nivelDatos.getMessageRead();
+		nivelDatos.close();
+		 
+		return read;
+	}
+	
+	public void setUnreadMsgNewStatus()
+	{
+		nivelDatos = new DataAccess();
+		nivelDatos.setUnreadMsgNewStatus();
+		nivelDatos.close();
+	}
+	
+	public String getEmailByUserName(String usrName, String userRol)
+	{
+		nivelDatos = new DataAccess();
+		String email = nivelDatos.getEmailByUserName(usrName, userRol);
+		nivelDatos.close();
+		
+		return email;
+	}
+	
+	 //Envia un email el administrador al usuario respondiendole de su mensaje
+	 public boolean enviarAdminEmailUsuario(String strEmail, String strMessage)
+	 {
+		boolean bool;//Devuelve true si el email se envio con exito, false en caso contrario
+		 
+	 	String to_email = strEmail;//Destinatario del email
+	 	
+	    //Cuenta hotmail desde la que enviamos el email
+	    final String from_email = "ruralhouse_g10@hotmail.com";
+	    final String password = "rh_av_234234@";
+	
+	    Properties props = new Properties();
+	    props.setProperty("mail.transport.protocol", "smtp");
+	    props.setProperty("mail.host", "smtp.live.com");
+	    props.put("mail.smtp.port", "587");
+	    props.put("mail.smtp.starttls.enable", "true");
+	    props.put("mail.smtp.auth", "true");
+	
+	    Session session2 = Session.getInstance(props,new javax.mail.Authenticator() 
+	    {
+	        protected PasswordAuthentication getPasswordAuthentication() 
+	        {
+	            return new PasswordAuthentication(from_email, password);
+	        }
+	    });
+	    
+       try{
+                   
+           MimeMessage message = new MimeMessage(session2);
+           message.addRecipient(Message.RecipientType.TO, new InternetAddress(to_email));
+          
+           //Asunto del Mail
+           message.setSubject("Respuesta a su mensaje");
+           //Contenido del Mail
+           message.setText("Hola " + to_email +",\n"+ strMessage +"\n\n Administrador");
+           
+          //Enviar email
+          Transport.send(message);       
+
+           System.out.println("Envío del email correcto.");
+           bool = true;
+           
+        }catch (MessagingException e) {
+           System.out.println("Error al enviar el email");	
+           System.out.println(e);
+           bool = false;
+        }  
+       
+       return bool;
+   } 
+	 
+	 public int getUnreadMessagesNumber()
+	 {	
+		 nivelDatos = new DataAccess();
+		 boolean[] arrayMessagesStatus = nivelDatos.getMessageRead();
+		 nivelDatos.close();
+		 
+		 int numUnreadMessages = 0;
+		 
+		 for(int i=0;i<arrayMessagesStatus.length;i++)
+			 if(arrayMessagesStatus[i] == false)
+				 numUnreadMessages++;
+		 
+		 return numUnreadMessages;
+	 }
+	 
+	 public ArrayList<Offer> buscarOfertasFiltros(String loc, int precioMax, int precioMin, int numHab, int numPersonas, Date dateI, Date dateF, boolean[] general, boolean[] cocina, boolean[] sala)
+	 {
+		 nivelDatos = new DataAccess();
+		 ArrayList<Offer> of = nivelDatos.buscarOfertasFiltros(loc, precioMax, precioMin, numHab, numPersonas, dateI, dateF, general,  cocina,  sala);
+		 nivelDatos.close();
+		 
+		 return of;
+	 }
+	 
+	public ArrayList<RuralHouse> getRuralHouseByOwnerId(String user)
+	{
+		nivelDatos = new DataAccess();
+		ArrayList<RuralHouse> listaRuralHouses = nivelDatos.getRuralHouseByOwnerId(user);
+		nivelDatos.close();
+		
+		return listaRuralHouses;
+	}
+	
+	public ArrayList<Offer> getOffersByRHId(int idCasa)
+	{
+		nivelDatos = new DataAccess();
+		ArrayList<Offer> listaOffers = nivelDatos.getOffersByRHId(idCasa);
+		nivelDatos.close();
+		
+		return listaOffers;
+	}
+	
+	public RuralHouse getRHById(int idCasa)
+	{
+		nivelDatos = new DataAccess();
+		RuralHouse rh = nivelDatos.getRHById(idCasa);
+		nivelDatos.close();
+		
+		return rh;
+	}
+	
+	public void eliminarOferta(int idOferta)
+	{
+		nivelDatos = new DataAccess();
+		nivelDatos.eliminarOferta(idOferta);
+		nivelDatos.close();
+	}
+	
+	public Offer getOfferByOfferId(int idOferta)
+	{
+		nivelDatos = new DataAccess();
+		Offer of = nivelDatos.getOfferByOfferId(idOferta);
+		nivelDatos.close();
+		
+		return of;
+	}
+	
+	/*
+	 public boolean crearOferta(RuralHouse rh, int idCasa, Date firstDay, Date lastDay, float price, String user)
+	 {
+		 boolean coincide = false;
+		 boolean b=false;
+		 
+		 nivelDatos=new DataAccess(); 
+		 b=nivelDatos.existeOfertasEnEsaCasayFecha(idCasa,firstDay,lastDay,price);
+		 if(!b){ // Crear oferta si no coincide con otra oferta de esa casa en ese periodo o parte de ese periodo
+			nivelDatos.createOffer(rh,firstDay,lastDay,price); 
+		 }else
+			 coincide = true;
+		 
+		nivelDatos.close();
+		 
+		return coincide;
+	 }
+	 
+	 */
+	 
+	public boolean modificarOferta(int idCasa, int idOferta, Date dateInicio, Date dateFin, float nuevoPrecio, int intEstadoSel)
+	{
+		boolean coincide = false;
+		boolean b = false;
+		
+		nivelDatos=new DataAccess(); 
+	
+		 b=nivelDatos.existeOfertasEnEsaCasayFecha(idCasa,dateInicio,dateFin,nuevoPrecio);
+		 if(!b){ // Crear oferta si no coincide con otra oferta de esa casa en ese periodo o parte de ese periodo
+			 nivelDatos.modificarOferta(idOferta, dateInicio, dateFin, nuevoPrecio, intEstadoSel);
+		 }else
+			 coincide = true;
+		 
+		nivelDatos.close();
+		 
+		return coincide;
+	}
+	
+	public boolean eliminarCasa(int idCasa)
+	{
+		boolean hayOfertasFuturasReservadasEnLaCasa = false;
+		boolean b=false;
+		 
+		 nivelDatos=new DataAccess(); 
+		 b=nivelDatos.existenOfertasFuturasReservadasEnEsaCasa(idCasa);
+		 if(!b){ // Crear oferta si no coincide con otra oferta de esa casa en ese periodo o parte de ese periodo
+			 nivelDatos.eliminarCasa(idCasa);
+		 }else
+			 hayOfertasFuturasReservadasEnLaCasa = true;
+		 
+		nivelDatos.close();
+		 
+		return hayOfertasFuturasReservadasEnLaCasa;
+	}
+	
+	public boolean realizarReservaRH(int idOfertaSeleccionada, String user)
+	{
+		nivelDatos=new DataAccess(); 
+		boolean b=nivelDatos.realizarReservaRH(idOfertaSeleccionada, user);
+		nivelDatos.close();
+		
+		return b;
+	}
+	
+	public boolean getUserRolByUserName(String user)
+	{
+		nivelDatos=new DataAccess();
+	    boolean userRol = nivelDatos.getUserRolByUsername(user);
+	    nivelDatos.close();
+		
+		return userRol;
+	}
 }
+
+
+
 

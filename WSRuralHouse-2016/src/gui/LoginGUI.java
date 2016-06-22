@@ -129,9 +129,14 @@ private static final long serialVersionUID = 1L;
 					  //Redireccionamos al jframe 
 						if(logicaNegocio.checkClientBlocked(userName)==false)
 						{
-							mostrarCasasGUI a=new mostrarCasasGUI(); //creamos un main para que redireccione a otro 
+							/*mostrarCasasGUI a=new mostrarCasasGUI(userName, strPassword); //creamos un main para que redireccione a otro 
 							a.setVisible(true);
 							setVisible(false);//ponemos la ventana de login invisible
+							*/
+							
+							MenuClienteGUI  a = new MenuClienteGUI(userName);
+							a.setVisible(true);
+							setVisible(false);
 						}else
 						{
 							msg = "Cliente bloqueado por el administrador";
@@ -143,13 +148,23 @@ private static final long serialVersionUID = 1L;
 							//Login correcto, es un cliente propietario
 							//Redireccionamos al jframe 
 								
-							DarAltaCasaGUI a=new DarAltaCasaGUI(); //creamos un main para que redireccione a otro 
+							MenuPropietario a=new MenuPropietario(userName); //creamos un main para que redireccione a otro 
 							a.setVisible(true);
 							setVisible(false);//ponemos la ventana de login invisible
 						}else
 						{
-							//Mostrar mensaje de error
-							msg = "Nombre de usuario y/o contraseña incorrectos";
+							if(prueba == 3)
+							{
+								//Login correcto es el admin
+								MenuAdminGUI a=new MenuAdminGUI();
+								a.setVisible(true);
+								setVisible(false);
+							}
+							else
+							{
+								//Mostrar mensaje de error
+								msg = "Nombre de usuario y/o contraseña incorrectos";
+							}
 						}
 						
 					}
